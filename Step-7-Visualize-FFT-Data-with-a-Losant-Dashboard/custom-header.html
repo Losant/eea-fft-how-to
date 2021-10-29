@@ -1,0 +1,89 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+
+<script>
+
+  let chart = null;
+
+  Chart.defaults.global.defaultFontColor = "#888c95";
+  Chart.defaults.global.defaultFontSize = 10;
+
+  var getData = function() {
+    console.log(DashboardBlock.input.queries)
+    if (!DashboardBlock.input.queries.fft) return
+
+    fetch(
+      DashboardBlock.input.queries.fft.value)
+      .then(response => response.json())
+      .then(data => drawGraph(data))
+  }
+
+  var drawGraph = function(data) {
+    let sampleRate = DashboardBlock.input.queries.sample-rate;
+
+    let canvas = document.getElementById('myChart');
+    canvas.width = DashboardBlock.input.size.width;
+    canvas.height = DashboardBlock.input.size.height;
+
+    let ctx = document.getElementById('myChart').getContext('2d');
+
+    data = data.map((n) => Math.round(n / 10000));
+
+    var labels = [];
+    for(let i = 0; i < 512; i++) {
+      labels.push(Math.round(i * sampleRate));
+    }
+
+    if(chart) {
+      chart.destroy();
+    }
+
+    chart = new Chart(ctx, { 
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{ 
+          label: 'Amplitude',
+          data: data,
+          hitRadius: 5,
+          pointRadius: 0,
+          borderWidth: 1,
+          backgroundColor: '#0AE1FF',
+          borderColor: '#0AE1FF',
+          fill: false,
+        }],
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio: false,
+        animation: false,
+        color: 'white',
+        scales: {
+          xAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Frequency (Hz)',
+            },
+            gridLines: {
+              color: "rgba(0, 0, 0, 0)",
+            }
+          }],
+          yAxes: [{
+            scaleLabel: {
+              display: true,
+              labelString: 'Amplitude',
+            },
+            ticks: {
+                suggestedMax: 10000
+            },
+            gridLines: {
+              color: "rgba(0, 0, 0, 0)",
+            }
+          }]
+        }
+      }
+    });
+  }
+
+  DashboardBlock.on('change', getData)
+</script>
